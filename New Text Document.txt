@@ -1,0 +1,45 @@
+import java.io.*;
+
+public class SA {
+
+    public static void main(String[] args) {
+
+
+        String file = "C:\\Users\\adminlocal\\Desktop\\Lab3-CloudComputing\\sales-2021-01-02.csv";
+        BufferedReader reader = null;
+        String line = "";
+
+        String[] price = new String[999]; 
+
+        int i = 0;
+
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            while((line = reader.readLine()) != null){
+
+
+                String[] index  = line.split(",");
+
+                price[i]       = index[3];
+
+
+                System.out.println(price[i]);
+
+                i++;
+            }
+
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        
+    }
+}

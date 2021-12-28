@@ -1,0 +1,14 @@
+main lab page:
+https://gnardin.pages.emse.fr/website/cloud/2021Fall/
+
+Lab3:
+https://gnardin.pages.emse.fr/website/cloud/2021Fall/lab/lab3.html
+
+Lab1:
+https://gnardin.pages.emse.fr/website/cloud/2021Fall/lab/lab1.html
+
+AWS ec2:
+https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#Instances:v=3;sort=instanceState
+
+SSH:
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html
