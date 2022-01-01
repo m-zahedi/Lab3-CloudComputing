@@ -73,8 +73,13 @@ public class Client_App {
             .build();
             sendMessage(sqsClient, queueName1, message);
             sqsClient.close();
-        
-        
+
+            System.out.println("Waiting few seconds to receive the messege from Outbox queue");
+            try {
+                Thread.sleep(10 * 1000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
 
         //retrieve message from Outbox queue
         SqsClient sqsClient2 = SqsClient.builder()
@@ -213,7 +218,7 @@ public class Client_App {
                 .build();
   
             sqsClient.sendMessage(sendMsgRequest);
-            System.out.println("\nMessage is sent to the queue");
+            System.out.println("\nClient Message is sent to the Inbox queue");
   
         } catch (SqsException e) {
             System.err.println(e.awsErrorDetails().errorMessage());
