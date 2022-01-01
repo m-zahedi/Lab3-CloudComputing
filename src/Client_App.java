@@ -73,7 +73,8 @@ public class Client_App {
             .build();
             sendMessage(sqsClient, queueName1, message);
             sqsClient.close();
-
+        
+        
 
         //retrieve message from Outbox queue
         SqsClient sqsClient2 = SqsClient.builder()
@@ -82,6 +83,8 @@ public class Client_App {
         //Outbox queue url
         String Url2="https://sqs.us-east-1.amazonaws.com/004250956885/Outbox";
         String message_content = RetrieveMessage(sqsClient2, Url2);
+        System.out.println(message_content);
+
         //System.out.println(message_content.length());
         String[] output = message_content.split("[,]", 0);
         String bucketName2 = output[0]; // bucket.emse.cloud.project.final
@@ -95,8 +98,8 @@ public class Client_App {
         //initializing s3 client &  region
         //initializing s3 client &  region
         S3Client s3_2 = S3Client.builder()
-                    .region(region)
-                    .build();
+            .region(region)
+            .build();   
         
         getObjectBytes(s3_2,bucketName,keyName2, path2);
     }   
@@ -291,8 +294,6 @@ public class Client_App {
         System.err.println(e.awsErrorDetails().errorMessage());
         System.exit(1);
         }
-
     }
 
-      
 }
