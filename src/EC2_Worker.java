@@ -163,14 +163,14 @@ public class EC2_Worker{
             if(counter[i]!=0){
                 average_per_country[i] = per_country[i]/counter[i];
             }
-            System.out.println(unique[i]+": "+per_country[i]+": "+ average_per_country[i]+ ": "+counter[i]);
+           // System.out.println(unique[i]+": "+per_country[i]+": "+ average_per_country[i]+ ": "+counter[i]);
         }
 
         for(i=0;i<unique2.length;i++){
             if(counter2[i]!=0){
                 average_per_product[i] = per_product[i]/counter2[i];
             }
-            System.out.println(unique2[i]+": "+per_product[i]+": "+ average_per_product[i]+": "+ counter2[i]);
+            //System.out.println(unique2[i]+": "+per_product[i]+": "+ average_per_product[i]+": "+ counter2[i]);
         }
 
         //write to csv
