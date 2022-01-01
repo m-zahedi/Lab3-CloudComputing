@@ -21,7 +21,16 @@ import software.amazon.awssdk.services.sqs.model.CreateQueueResponse;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SqsException;
-
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.QueueNameExistsException;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import java.util.List;
+import software.amazon.awssdk.services.sqs.model.*;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 
 
@@ -56,7 +65,7 @@ public class Client_App {
         String queueName1 = "Inbox";
 
         //initializing message content
-        String message = "Bucket name: " + bucketName + " ,File name: " + objectKey;
+        String message =  bucketName + "," + objectKey;
         
         //initializing sqs client & region
         SqsClient sqsClient = SqsClient.builder()
@@ -64,6 +73,32 @@ public class Client_App {
             .build();
             sendMessage(sqsClient, queueName1, message);
             sqsClient.close();
+
+
+        //retrieve message from Outbox queue
+        SqsClient sqsClient2 = SqsClient.builder()
+        .region(Region.US_EAST_1)
+        .build();
+        //Outbox queue url
+        String Url2="https://sqs.us-east-1.amazonaws.com/004250956885/Outbox";
+        String message_content = RetrieveMessage(sqsClient2, Url2);
+        //System.out.println(message_content.length());
+        String[] output = message_content.split("[,]", 0);
+        String bucketName2 = output[0]; // bucket.emse.cloud.project.final
+        String keyName2 = output[1]; // sales-2021-01-02.csv
+        System.out.println("Message retrieved from bucket: "+ bucketName2);
+        System.out.println("File name: " + keyName2);
+        sqsClient.close();
+
+        //retrieve file
+        String path2 = "C:\\Users\\adminlocal\\Desktop\\Lab3-CloudComputing\\result2.csv";
+        //initializing s3 client &  region
+        //initializing s3 client &  region
+        S3Client s3_2 = S3Client.builder()
+                    .region(region)
+                    .build();
+        
+        getObjectBytes(s3_2,bucketName,keyName2, path2);
     }   
 
     public static void createBucket( S3Client s3Client, String bucketName) {
@@ -182,5 +217,82 @@ public class Client_App {
             System.exit(1);
         }
     }
+
+    public static String RetrieveMessage(SqsClient sqsClient, String Url) {
+	        
+        try {
+            // Receive messages from the queue
+            ReceiveMessageRequest receiveRequest = ReceiveMessageRequest.builder()
+                .queueUrl(Url)
+                .build();
+
+            List<Message> messages = sqsClient.receiveMessage(receiveRequest).messages();
+            String message_content = "";
+
+            // Print out the messages
+            //System.out.println("\nMassege content: ");
+             for (Message m : messages) {
+                //System.out.println("\n" +m.body());
+                 message_content = m.body();
+             }
+
+             
+            deleteMessages(sqsClient, Url,  messages);
+            return(message_content);
+
+        } catch (QueueNameExistsException e) {
+            throw e;
+        }
+        
+    }
+    
+    public static void deleteMessages(SqsClient sqsClient, String queueUrl,  List<Message> messages) {
+
+  
+        try {
+            for (Message message : messages) {
+                DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
+                    .queueUrl(queueUrl)
+                    .receiptHandle(message.receiptHandle())
+                    .build();
+                sqsClient.deleteMessage(deleteMessageRequest);
+                System.out.println("\nMessage is deleted.");
+            }
+  
+  
+        } catch (SqsException e) {
+            System.err.println(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        }
+   }
+
+   public static void getObjectBytes (S3Client s3, String bucketName, String keyName, String path ) {
+	
+        try {
+            GetObjectRequest objectRequest = GetObjectRequest
+                    .builder()
+                    .key(keyName)
+                    .bucket(bucketName)
+                    .build();
+
+            ResponseBytes<GetObjectResponse> objectBytes = s3.getObjectAsBytes(objectRequest);
+            byte[] data = objectBytes.asByteArray();
+
+            // Write the data to a local file
+            File myFile = new File(path );
+            OutputStream os = new FileOutputStream(myFile);
+            os.write(data);
+            System.out.println("Successfully obtained file from an S3 object");
+            os.close();
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (S3Exception e) {
+        System.err.println(e.awsErrorDetails().errorMessage());
+        System.exit(1);
+        }
+
+    }
+
       
 }
