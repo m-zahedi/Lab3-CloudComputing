@@ -66,31 +66,26 @@ public class EC2_Worker{
       sqsClient.close();
 
       String path = "C:\\Users\\adminlocal\\Desktop\\Lab3-CloudComputing\\downloaded.csv";
-      
-        //initializing s3 client &  region
-        Region region = Region.US_EAST_1;
-        S3Client s3 = S3Client.builder()
-                              .region(region)
-                              .build();
+    
+      //initializing s3 client &  region
+      Region region = Region.US_EAST_1;
+      S3Client s3 = S3Client.builder()
+                       .region(region)
+                       .build();
     
       getObjectBytes(s3,bucketName,keyName, path);
 
       //read from csv
-      String line = "";  
-      
-      String[] sold = new String[999]; // Creating a new Array of Size 999
-      String[] countries = new String[999]; // Creating a new Array of Size 999
-      String[][] countries_and_sold = new String[999][2]; 
+      String line = "";    
+      String[] sold = new String[999]; 
+      String[] countries = new String[999]; 
+      String[] products = new String[999];
       int i = 0;
       int j = 0;
-   
       int total_sold = 0;
       int total_number=0;
-      int average = 0;
+     
 
-      Set<String> unique_countries = new HashSet<String>();
-      
-      
       //parsing a CSV file into BufferedReader class constructor 
       try{  
            
@@ -101,14 +96,11 @@ public class EC2_Worker{
               
               // usinsg space as separator
               String[] index = line.split(",");    
-
-              sold[i]=index[3];
+              sold[i]=index[3]; 
               
               countries[i]= index[8];
-
-              countries_and_sold[i][0]= index[8];
-              countries_and_sold[i][1]= index[3];
-
+              products[i]=index[2];
+               
               i++;
           }    
           
@@ -122,117 +114,92 @@ public class EC2_Worker{
           } 
           System.out.println( "total amount sold: " + total_sold);
 
-        //   List<String> centerList = Arrays.asList(countries);
-        //   unique_countries = new HashSet<String>();
-        //   unique_countries.addAll(centerList);   
-        //   String[] unique = unique_countries.toArray(new String[unique_countries.size()]);
-        
-        String[] unique = new String[]{
-        "Malaysia",
-        "Iceland",
-        "Greece",
-        "Austria",
-        "Latvia",
-        "South Korea",
-        "Monaco",
-        "Luxembourg",
-        "Brazil",
-        "Guatemala",
-        "Jersey",
-        "Argentina",
-        "Hungary",
-        "Japan",
-        "Ukraine",
-        "Moldova",
-        "Cayman Isls",
-        "Bahrain",
-        "Mauritius",
-        "India",
-        "New Zealand",
-        "Canada",
-        "Turkey",
-        "Belgium",
-        "The Bahamas",
-        "Finland",
-        "South Africa",
-        "Germany",
-        "Hong Kong",
-        "United States",
-        "Thailand",
-        "Malta",
-        "Russia",
-        "Costa Rica",
-        "Sweden",
-        "Netherlands",
-        "Ireland",
-        "China",
-        "Poland",
-        "France",
-        "Kuwait",
-        "Bulgaria",
-        "Romania",
-        "Philippines",
-        "United Kingdom",
-        "United Arab Emirates",
-        "Switzerland",
-        "Spain",
-        "Czech Republic",
-        "Norway",
-        "Denmark",
-        "Dominican Republic",
-        "Israel",
-        "Australia",
-    };
-
+          //array of unique countries
+          List<String> centerList = Arrays.asList(countries);
+          Set<String> unique_countries = new HashSet<String>();
+          unique_countries = new HashSet<String>();
+          unique_countries.addAll(centerList);   
+          String[] unique = unique_countries.toArray(new String[unique_countries.size()]);
           int [] per_country = new  int [unique.length];
-          int sum = 0;
-          int count = 0;
-          for(i=1;i<=998;i++) {
-             
-            System.out.println(countries[i]);
+          int [] counter = new  int [unique.length];
+          int [] average_per_country = new  int [unique.length];
+
+          //array of unique products
+          List<String> centerList2 = Arrays.asList(products);
+          Set<String> unique_products = new HashSet<String>();
+          unique_products= new HashSet<String>();
+          unique_products.addAll(centerList2);   
+          String[] unique2 = unique_products.toArray(new String[unique_products.size()]);
+          int [] per_product = new  int [unique2.length];
+          int [] counter2 = new  int [unique2.length];
+          int [] average_per_product = new  int [unique2.length];
+          
+        for(j=0;j<unique.length;j++){  
+          counter[j]=0;
+        }
+ 
+        for(i=1;i<=998;i++) {
+  
+             //average per country
              for(j=0;j<unique.length;j++){
-                     
-                  if(countries[i]==unique[j]){
+                    
+                  if(countries[i].equals(unique[j])){
                     per_country[j] = per_country[j] + Integer.parseInt(sold[i]);
-                    sum+= Integer.parseInt(sold[i]);
-                    count++; 
-
-                 }
+                    counter[j]++;
+                }
             }
-
-        }  
+            //average per product
+            for(j=0;j<unique2.length;j++){
+                    
+                if(products[i].equals(unique2[j])){
+                  per_product[j] = per_product[j] + Integer.parseInt(sold[i]);
+                  counter2[j]++;
+              }
+          }
+            
+        } 
 
         for(i=0;i<unique.length;i++){
-
-          // System.out.print(unique[i]+": "); 
-          // System.out.println(per_country[i]);
+            if(counter[i]!=0){
+                average_per_country[i] = per_country[i]/counter[i];
+            }
+            System.out.println(unique[i]+": "+per_country[i]+": "+ average_per_country[i]+ ": "+counter[i]);
         }
-       // System.out.println(unique.length);
-       // System.out.println(count);
+
+        for(i=0;i<unique2.length;i++){
+            if(counter2[i]!=0){
+                average_per_product[i] = per_product[i]/counter2[i];
+            }
+            System.out.println(unique2[i]+": "+per_product[i]+": "+ average_per_product[i]+": "+ counter2[i]);
+        }
+
+        //write to csv
+        String objectKey2 = "result.csv";
+        String objectpath = "C:\\Users\\adminlocal\\Desktop\\Lab3-CloudComputing\\result.csv";
+        writeDataLineByLine(objectpath,total_number, total_sold,average_per_country,unique,average_per_product,unique2);
+
+        //upload file to S3
+        System.out.println("Putting object " + objectKey2 +" into bucket "+bucketName);
+        String result = putS3Object(s3, bucketName, objectKey2, objectpath);
+        System.out.println("Tag information: "+result);
+
+        //send message to put box que
+        String message =  bucketName + "," + objectKey2;
+
+        //initializing sqs client & region
+        SqsClient sqsClient2 = SqsClient.builder()
+        .region(Region.US_EAST_1)
+        .build();
+        sendMessage(sqsClient2, queueName2, message); //queueName2: outbox queue
+        sqsClient2.close();
           
       }catch (IOException e){  
           e.printStackTrace();  
       }
 
-    //write to csv
-    String objectKey2 = "result.csv";
-    String objectpath = "C:\\Users\\adminlocal\\Desktop\\Lab3-CloudComputing\\result.csv";
-    writeDataLineByLine(objectpath,total_number, total_sold);
 
-    //upload file to S3
-    System.out.println("Putting object " + objectKey2 +" into bucket "+bucketName);
-    String result = putS3Object(s3, bucketName, objectKey2, objectpath);
-    System.out.println("Tag information: "+result);
 
-    //send message to put box que
-    String message =  bucketName + "," + objectKey2;
 
-    //initializing sqs client & region
-    SqsClient sqsClient2 = SqsClient.builder()
-        .region(Region.US_EAST_1)
-        .build();
-        sendMessage(sqsClient2, queueName2, message); //queueName2: outbox queue
-        sqsClient2.close();
   }
 
   public static String createQueue(SqsClient sqsClient,String queueName ) {
@@ -439,36 +406,64 @@ public static String putS3Object(S3Client s3,
         return bytesArray;
     }
 
-    public static void writeDataLineByLine(String filePath, int total_number, int total_sold){
-	// first create file object for file placed at location
-	// specified by filepath
-	File file = new File(filePath);
-	try {
-		// create FileWriter object with file as parameter
-		FileWriter result = new FileWriter(file);
+    public static void writeDataLineByLine(String filePath, 
+                                           int total_number, 
+                                           int total_sold,
+                                           int [] average_per_country,
+                                           String [] unique,
+                                           int [] average_per_product,
+                                           String [] unique2
+                                           ){
+        // first create file object for file placed at location
+        // specified by filepath
+        
+        File file = new File(filePath);
+        try {
+            // create FileWriter object with file as parameter
+            FileWriter result = new FileWriter(file);
 
-		// create CSVWriter object filewriter object as parameter
-		CSVWriter writer = new CSVWriter(result);
+            // create CSVWriter object filewriter object as parameter
+            CSVWriter writer = new CSVWriter(result);
 
-		// adding header to csv
-		String[] header = { "Total Number of Sales", "Total Amount Sold" };
-		writer.writeNext(header);
+            // adding header to csv
+            String[] header = { "Total Number of Sales", "Total Amount Sold","Country","Average per country","Product", "Average per product"};
+            writer.writeNext(header);
 
-        Integer total_number1 = new Integer(total_number);
-        Integer total_sold1 = new Integer(total_sold);
-        		// add data to csv
-		String[] data1 = { total_number1.toString(), total_sold1.toString()};
-		writer.writeNext(data1);
+            Integer total_number1 = new Integer(total_number);
+            Integer total_sold1 = new Integer(total_sold);
 
-		// closing writer connection
-		writer.close();
+            Integer[] average_per_country1 = new Integer[average_per_country.length];
+            Integer[] average_per_product1 = new Integer[average_per_product.length];
+            int i = 0;
+            for(i=0;i<average_per_country.length;i++){
+                average_per_country1[i] = average_per_country[i];
+            }
+            for(i=0;i<average_per_product.length;i++){
+                average_per_product1[i] = average_per_product[i];
+            }
+            // add data to csv    
+            String[] data1 = { total_number1.toString(), total_sold1.toString(),unique[0],average_per_country1[0].toString(),unique2[0],average_per_product1[0].toString()};
+            writer.writeNext(data1);
+
+            for(i=1;i<average_per_country.length;i++){
+                if(i<10){
+                    String[] data2 = {"","",unique[i],average_per_country1[i].toString(),unique2[i],average_per_product1[i].toString()};
+                    writer.writeNext(data2);
+                }else{
+                    String[] data2 = {"","",unique[i],average_per_country1[i].toString(),"",""};
+                    writer.writeNext(data2); 
+                }
+
+            }
+
+            // closing writer connection
+            writer.close();
 	}
 	catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	}
     }
-
 
     public static void sendMessage(SqsClient sqsClient, String queueName, String message) {
 
